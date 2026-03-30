@@ -9,7 +9,7 @@ def run_simulation(portfolio: Portfolio, n_paths: int = 100_000, years: int = 15
     Returns an array of shape (n_paths, trading_days) with simulated portfolio values.
     """
     tickers = [a.ticker for a in portfolio.assets]
-    weights = np.array([a.current_value / portfolio.total_value for a in portfolio.assets])
+    weights = np.array([a.current_value_eur / portfolio.total_value for a in portfolio.assets])
 
     hist = get_multiple_history(tickers, period="5y")
     returns = hist.pct_change().dropna()
