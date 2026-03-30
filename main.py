@@ -45,6 +45,11 @@ def main():
     risk_parser = subparsers.add_parser("risk", help="Show portfolio risk metrics")
     risk_parser.add_argument("--period", type=str, default="2y", help="Historical period for calculations (default: 2y)")
 
+    # benchmark
+    bench_parser = subparsers.add_parser("benchmark", help="Compare portfolio against a benchmark index")
+    bench_parser.add_argument("--benchmark", type=str, default="sp500", help="Benchmark: sp500, aex, ftse, dax, nasdaq or a raw ticker (default: sp500)")
+    bench_parser.add_argument("--period",    type=str, default="2y",    help="Historical period (default: 2y)")
+
     args = parser.parse_args()
 
     if args.command == "add":
@@ -74,6 +79,8 @@ def main():
         portfolio_controller.show_correlation(args.period)
     elif args.command == "risk":
         portfolio_controller.show_risk(args.period)
+    elif args.command == "benchmark":
+        portfolio_controller.show_benchmark(args.benchmark, args.period)
     else:
         parser.print_help()
 

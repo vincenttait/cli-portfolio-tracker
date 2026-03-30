@@ -141,3 +141,50 @@ def render_risk(metrics: dict):
     table.add_row("CVaR (95%)",    fmt_pct(metrics["cvar_95"]),         "Avg loss on worst 5% of days")
 
     console.print(table)
+
+
+def render_benchmark(metrics: dict):
+    """Render benchmark comparison as a Rich table."""
+    table = Table(
+        title=f"Benchmark comparison vs {metrics['benchmark'].upper()} ({metrics['period']})",
+        box=box.ROUNDED
+    )
+    table.add_column("Metric",      style="bold")
+    table.add_column("Value",       justify="right")
+    table.add_column("Interpretation")
+
+    out_color = "green" if metrics["outperformance"] >= 0 else "red"
+    out_sign  = "+" if metrics["outperformance"] >= 0 else ""
+
+    def fmt_pct(v):
+        color = "green" if v >= 0 else "red"
+        sign  = "+" if v >= 0 else ""
+        return f"[{color}]{sign}{v:.2f}%[/{color}]"
+
+    table.add_row(
+        "Portfolio return",
+        fmt_pct(metrics["portfolio_return"]),
+        f"Over {metrics['period']}"
+    )
+    table.add_row(
+        "Benchmark return",
+        fmt_pct(metrics["benchmark_return"]),
+        f"{metrics['benchmark'].upper()} over {metrics['period']}"
+    )
+    table.add_row(
+        "Outperformance",
+        f"[{out_color}]{out_sign}{metrics['outperformance']:.2f}%[/{out_color}]",
+        "Portfolio minus benchmark"
+    )
+    table.add_row(
+        "Alpha",
+        fmt_pct(metrics["alpha"]),
+        "Annualised excess return (CAPM)"
+    )
+    table.add_row(
+        "Beta",
+        f"{metrics['beta']:.4f}",
+        "< 1.0 less volatile than benchmark"
+    )
+
+    console.print(table)

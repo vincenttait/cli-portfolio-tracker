@@ -123,3 +123,18 @@ def show_risk(period: str = "2y"):
     table_view.render_message(f"Computing risk metrics from {period} of historical data...")
     metrics = risk.compute_all(tickers, weights, period)
     table_view.render_risk(metrics)
+
+
+def show_benchmark(benchmark: str = "sp500", period: str = "2y"):
+    """Compare portfolio performance against a benchmark index."""
+    from portfolio_tracker.models import risk
+    portfolio = Portfolio()
+    if not portfolio.assets:
+        table_view.render_message("Your portfolio is empty.")
+        return
+    tickers = [a.ticker for a in portfolio.assets]
+    weights = [a.current_value_eur / portfolio.total_value for a in portfolio.assets]
+    table_view.render_message(f"Comparing portfolio against {benchmark.upper()} over {period}...")
+    metrics = risk.benchmark_comparison(tickers, weights, benchmark, period)
+    table_view.render_benchmark(metrics)
+    chart_view.plot_benchmark_comparison(metrics)

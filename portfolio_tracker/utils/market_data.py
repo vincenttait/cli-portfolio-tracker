@@ -3,6 +3,14 @@ import pandas as pd
 
 TRADING_DAYS_PER_YEAR = 252  #252 is the convention for the number of trading days in a year.
 
+BENCHMARKS = {
+    "sp500":  "^GSPC",
+    "aex":    "^AEX",
+    "ftse":   "^FTSE",
+    "dax":    "^GDAXI",
+    "nasdaq": "^IXIC",
+}
+
 
 def get_current_price(ticker: str) -> float:
     stock = yf.Ticker(ticker)
@@ -48,3 +56,14 @@ def get_history(ticker: str, period: str = "1y") -> pd.DataFrame:
 def get_multiple_history(tickers: list[str], period: str = "1y") -> pd.DataFrame:
     data = yf.download(tickers, period=period, auto_adjust=True)["Close"]
     return data
+
+
+def get_benchmark_history(benchmark: str, period: str = "2y") -> pd.DataFrame:
+    """
+    Fetch historical data for a benchmark index.
+    Accepts either a shorthand (sp500, aex, ftse, dax, nasdaq) or a raw Yahoo Finance ticker.
+    """
+    ticker = BENCHMARKS.get(benchmark.lower(), benchmark)
+    stock = yf.Ticker(ticker)
+    hist = stock.history(period=period)
+    return hist[["Close"]]

@@ -79,3 +79,48 @@ def compute_all(tickers: list[str], weights: list[float], period: str = "2y") ->
         "cvar_95":       conditional_value_at_risk(returns, 0.95),
         "period":        period,
     }
+
+def benchmark_comparison(
+    tickers: list[str],
+    weights: list[float],
+    benchmark: str = "sp500",
+    period: str = "2y"
+) -> dict:
+    """
+    Compare portfolio performance against a benchmark index.
+    Computes alpha, beta, and cumulative return for both.
+    """
+    from portfolio_tracker.utils.market_data import get_benchmark_history
+
+    portfolio_returns = get_portfolio_returns(tickers, weights, period)
+    bench_hist = get_benchmark_history(benchmark, period)
+    bench_returns = bench_hist["Close"].pct_change().dropna()
+
+    # Align dates — only keep days both have data
+    aligned = pd.concat([portfolio_returns, bench_returns], axis=1).dropna()
+    aligned.columns = ["portfolio", "benchmark"]
+
+    # Beta: how much the portfolio moves relative to the benchmark
+    cov = np.cov(aligned["portfolio"], aligned["benchmark"])
+    beta = cov[0, 1] / cov[1, 1]
+
+    # Alpha: annualised excess return over what beta would predict
+    portfolio_ann = aligned["portfolio"].mean() * TRADING_DAYS_PER_YEAR
+    benchmark_ann = aligned["benchmark"].mean() * TRADING_DAYS_PER_YEAR
+    alpha = portfolio_ann - (RISK_FREE_RATE + beta * (benchmark_ann - RISK_FREE_RATE))
+
+    # Cumulative returns over the period
+    portfolio_cumulative = (1 + aligned["portfolio"]).cumprod().iloc[-1] - 1
+    benchmark_cumulative = (1 + aligned["benchmark"]).cumprod().iloc[-1] - 1
+
+    return {
+        "alpha":                alpha * 100,
+        "beta":                 beta,
+        "portfolio_return":     portfolio_cumulative * 100,
+        "benchmark_return":     benchmark_cumulative * 100,
+        "outperformance":       (portfolio_cumulative - benchmark_cumulative) * 100,
+        "benchmark":            benchmark,
+        "period":               period,
+        "aligned_portfolio":    aligned["portfolio"],
+        "aligned_benchmark":    aligned["benchmark"],
+    }

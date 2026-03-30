@@ -94,3 +94,27 @@ def plot_correlation(returns: pd.DataFrame):
     ax.set_title("Asset return correlation matrix")
     plt.tight_layout()
     plt.show()
+
+
+def plot_benchmark_comparison(metrics: dict):
+    """Plot cumulative portfolio returns against a benchmark index."""
+    portfolio_returns = metrics["aligned_portfolio"]
+    benchmark_returns = metrics["aligned_benchmark"]
+
+    portfolio_cumulative = (1 + portfolio_returns).cumprod()
+    benchmark_cumulative = (1 + benchmark_returns).cumprod()
+
+    fig, ax = plt.subplots(figsize=(12, 6))
+    ax.plot(portfolio_cumulative.index, portfolio_cumulative.values, label="Portfolio",                    linewidth=2, color="steelblue")
+    ax.plot(benchmark_cumulative.index, benchmark_cumulative.values, label=metrics["benchmark"].upper(),   linewidth=2, color="gray", linestyle="--")
+    ax.axhline(y=1.0, color="black", linestyle=":", linewidth=0.8)
+
+    ax.set_title(f"Portfolio vs {metrics['benchmark'].upper()} ({metrics['period']})")
+    ax.set_xlabel("Date")
+    ax.set_ylabel("Cumulative return (1 = starting value)")
+    ax.xaxis.set_major_formatter(mdates.DateFormatter("%b %Y"))
+    ax.xaxis.set_major_locator(mdates.MonthLocator(interval=3))
+    ax.legend()
+    fig.autofmt_xdate()
+    plt.tight_layout()
+    plt.show()
