@@ -117,3 +117,27 @@ def render_message(message: str):
 def render_error(message: str):
     """Render an error message in red."""
     console.print(f"[red]Error: {message}[/red]")
+    
+    
+def render_risk(metrics: dict):
+    """Render risk metrics as a Rich table."""
+    table = Table(title=f"Risk metrics ({metrics['period']} history)", box=box.ROUNDED)
+    table.add_column("Metric",      style="bold")
+    table.add_column("Value",       justify="right")
+    table.add_column("Interpretation")
+
+    def fmt_ratio(v):
+        color = "green" if v >= 1.0 else "yellow" if v >= 0.5 else "red"
+        return f"[{color}]{v:.4f}[/{color}]"
+
+    def fmt_pct(v):
+        color = "green" if v >= 0 else "red"
+        return f"[{color}]{v:.2f}%[/{color}]"
+
+    table.add_row("Sharpe ratio",  fmt_ratio(metrics["sharpe_ratio"]),  "> 1.0 good, > 2.0 excellent")
+    table.add_row("Sortino ratio", fmt_ratio(metrics["sortino_ratio"]), "> 1.0 good, penalises downside only")
+    table.add_row("Max drawdown",  fmt_pct(metrics["max_drawdown"]),    "Largest peak-to-trough decline")
+    table.add_row("VaR (95%)",     fmt_pct(metrics["var_95"]),          "Max daily loss 95% of the time")
+    table.add_row("CVaR (95%)",    fmt_pct(metrics["cvar_95"]),         "Avg loss on worst 5% of days")
+
+    console.print(table)

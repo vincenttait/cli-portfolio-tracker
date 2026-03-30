@@ -109,3 +109,17 @@ def simulate():
     paths = run_simulation(portfolio)
     percentiles = get_percentiles(paths)
     chart_view.plot_simulation_fan(percentiles, portfolio.total_value)
+
+
+def show_risk(period: str = "2y"):
+    """Compute and display portfolio risk metrics."""
+    from portfolio_tracker.models import risk
+    portfolio = Portfolio()
+    if not portfolio.assets:
+        table_view.render_message("Your portfolio is empty.")
+        return
+    tickers = [a.ticker for a in portfolio.assets]
+    weights = [a.current_value_eur / portfolio.total_value for a in portfolio.assets]
+    table_view.render_message(f"Computing risk metrics from {period} of historical data...")
+    metrics = risk.compute_all(tickers, weights, period)
+    table_view.render_risk(metrics)

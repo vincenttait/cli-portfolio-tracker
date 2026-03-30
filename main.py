@@ -22,11 +22,11 @@ def main():
     add_parser.add_argument("--date",         type=str,   help="Purchase date (YYYY-MM-DD), defaults to today")
 
     # show
-    subparsers.add_parser("show",        help="Show current portfolio")
-    subparsers.add_parser("weights",     help="Show portfolio weights by asset, sector and class")
-    subparsers.add_parser("orders",      help="Show full order history")
-    subparsers.add_parser("charts",      help="Show portfolio pie charts")
-    subparsers.add_parser("simulate",    help="Run Monte Carlo simulation")
+    subparsers.add_parser("show",     help="Show current portfolio")
+    subparsers.add_parser("weights",  help="Show portfolio weights by asset, sector and class")
+    subparsers.add_parser("orders",   help="Show full order history")
+    subparsers.add_parser("charts",   help="Show portfolio pie charts")
+    subparsers.add_parser("simulate", help="Run Monte Carlo simulation")
 
     # delete
     del_parser = subparsers.add_parser("delete", help="Delete an order by ID")
@@ -40,6 +40,10 @@ def main():
     # correlate
     corr_parser = subparsers.add_parser("correlate", help="Show asset return correlation heatmap")
     corr_parser.add_argument("--period", type=str, default="1y", help="Period for historical returns (default: 1y)")
+
+    # risk
+    risk_parser = subparsers.add_parser("risk", help="Show portfolio risk metrics")
+    risk_parser.add_argument("--period", type=str, default="2y", help="Historical period for calculations (default: 2y)")
 
     args = parser.parse_args()
 
@@ -68,6 +72,8 @@ def main():
         portfolio_controller.show_history(args.tickers, args.period)
     elif args.command == "correlate":
         portfolio_controller.show_correlation(args.period)
+    elif args.command == "risk":
+        portfolio_controller.show_risk(args.period)
     else:
         parser.print_help()
 
