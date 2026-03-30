@@ -152,3 +152,44 @@ def show_frontier(period: str = "2y"):
     frontier = risk.efficient_frontier(tickers, period)
     table_view.render_frontier(frontier)
     chart_view.plot_efficient_frontier(frontier)
+
+
+def export_report(filename: str = None):
+    """Generate a comprehensive PDF portfolio report."""
+    from portfolio_tracker.utils.export import export_pdf
+    from portfolio_tracker.models.simulation import run_simulation
+    from portfolio_tracker.models import risk
+
+    portfolio = Portfolio()
+    if not portfolio.assets:
+        table_view.render_message("Your portfolio is empty.")
+        return
+
+    tickers = [a.ticker for a in portfolio.assets]
+    weights = [a.current_value_eur / portfolio.total_value for a in portfolio.assets]
+
+    table_view.render_message("Running simulation...")
+    paths = run_simulation(portfolio)
+
+    table_view.render_message("Computing benchmark comparison...")
+    benchmark_metrics = risk.benchmark_comparison(tickers, weights, benchmark="sp500", period="2y")
+
+    table_view.render_message("Computing efficient frontier...")
+    frontier = risk.efficient_frontier(tickers, period="2y")
+
+    table_view.render_message("Generating PDF report...")
+    output_path = export_pdf(
+        summary=portfolio.get_summary(),
+        weights=portfolio.get_weights(),
+        sector_breakdown=portfolio.get_sector_breakdown(),
+        asset_class_breakdown=portfolio.get_asset_class_breakdown(),
+        total_value=portfolio.total_value,
+        total_invested=portfolio.total_invested,
+        total_gain_loss=portfolio.total_gain_loss,
+        total_gain_loss_pct=portfolio.total_gain_loss_pct,
+        paths=paths,
+        benchmark_metrics=benchmark_metrics,
+        frontier=frontier,
+        filename=filename,
+    )
+    table_view.render_message(f"[green]Report saved to {output_path}[/green]")

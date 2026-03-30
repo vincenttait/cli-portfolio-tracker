@@ -54,6 +54,10 @@ def main():
     frontier_parser = subparsers.add_parser("frontier", help="Plot the efficient frontier for the current portfolio")
     frontier_parser.add_argument("--period", type=str, default="2y", help="Historical period (default: 2y)")
 
+    # export
+    export_parser = subparsers.add_parser("export", help="Export portfolio report as PDF")
+    export_parser.add_argument("--filename", type=str, default=None, help="Output filename (default: portfolio_report_YYYY-MM-DD.pdf)")
+
     args = parser.parse_args()
 
     if args.command == "add":
@@ -87,6 +91,8 @@ def main():
         portfolio_controller.show_benchmark(args.benchmark, args.period)
     elif args.command == "frontier":
         portfolio_controller.show_frontier(args.period)
+    elif args.command == "export":
+        portfolio_controller.export_report(args.filename)
     else:
         parser.print_help()
 
