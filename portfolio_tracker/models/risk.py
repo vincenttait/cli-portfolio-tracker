@@ -96,6 +96,10 @@ def benchmark_comparison(
     bench_hist = get_benchmark_history(benchmark, period)
     bench_returns = bench_hist["Close"].pct_change().dropna()
 
+    # Strip timezone info to avoid tz-naive vs tz-aware mismatch across exchanges
+    portfolio_returns.index = portfolio_returns.index.tz_localize(None)
+    bench_returns.index = bench_returns.index.tz_localize(None)
+
     # Align dates — only keep days both have data
     aligned = pd.concat([portfolio_returns, bench_returns], axis=1).dropna()
     aligned.columns = ["portfolio", "benchmark"]
@@ -106,7 +110,7 @@ def benchmark_comparison(
 
     # Alpha: annualised excess return over what beta would predict
     portfolio_ann = aligned["portfolio"].mean() * TRADING_DAYS_PER_YEAR
-    benchmark_ann = aligned["benchmark"].mean() * TRADING_DAYS_PER_YEAR
+    benchmark_ann  = aligned["benchmark"].mean() * TRADING_DAYS_PER_YEAR
     alpha = portfolio_ann - (RISK_FREE_RATE + beta * (benchmark_ann - RISK_FREE_RATE))
 
     # Cumulative returns over the period
@@ -114,13 +118,13 @@ def benchmark_comparison(
     benchmark_cumulative = (1 + aligned["benchmark"]).cumprod().iloc[-1] - 1
 
     return {
-        "alpha":                alpha * 100,
-        "beta":                 beta,
-        "portfolio_return":     portfolio_cumulative * 100,
-        "benchmark_return":     benchmark_cumulative * 100,
-        "outperformance":       (portfolio_cumulative - benchmark_cumulative) * 100,
-        "benchmark":            benchmark,
-        "period":               period,
-        "aligned_portfolio":    aligned["portfolio"],
-        "aligned_benchmark":    aligned["benchmark"],
+        "alpha":             alpha * 100,
+        "beta":              beta,
+        "portfolio_return":  portfolio_cumulative * 100,
+        "benchmark_return":  benchmark_cumulative * 100,
+        "outperformance":    (portfolio_cumulative - benchmark_cumulative) * 100,
+        "benchmark":         benchmark,
+        "period":            period,
+        "aligned_portfolio": aligned["portfolio"],
+        "aligned_benchmark": aligned["benchmark"],
     }
