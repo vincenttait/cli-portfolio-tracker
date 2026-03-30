@@ -75,7 +75,7 @@ sudo apt install python3-tk
 
 1. Clone the repository:
 ```bash
-git clone <repository-url>
+git clone https://github.com/vincenttait/cli-portfolio-tracker
 cd cli-portfolio-tracker
 ```
 
