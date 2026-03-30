@@ -3,16 +3,27 @@ A command-line portfolio tracking application built as part of a job application
 
 ---
 
-## Features
+## Assignment requirements
 
-- Add and manage orders across global stock exchanges
-- View current portfolio with live prices, EUR-converted values, and gain/loss
-- Automatic multi-currency support with live FX conversion to EUR
-- Portfolio weights broken down by asset, sector, and asset class
-- Price history charts for one or multiple tickers
-- Asset return correlation heatmap
-- Monte Carlo simulation (100,000 paths, 15-year outlook) using Geometric Brownian Motion
-- Full order history with per-transaction detail
+The following five requirements from the assignment brief are all implemented:
+
+1. **Add assets** - add orders specifying ticker, sector, asset class, quantity, and purchase price
+2. **Price history** - show current and historical prices with charts for single or multiple tickers
+3. **View portfolio** - display name, sector, asset class, quantity, purchase price, transaction value, and current value per asset
+4. **Weights** - total portfolio value and relative weights per asset, sector, and asset class
+5. **Simulation** - 100,000 Monte Carlo paths over 15 years using Geometric Brownian Motion
+
+---
+
+## Extensions
+
+Beyond the assignment requirements, the following features were added:
+
+- **Multi-currency support** - live FX conversion to EUR via Yahoo Finance for portfolios spanning global exchanges
+- **Risk metrics** - Sharpe ratio, Sortino ratio, maximum drawdown, VaR (95%), and CVaR (95%)
+- **Benchmark comparison** - compare portfolio performance against major indices (S&P 500, AEX, FTSE, DAX, NASDAQ) with alpha and beta
+- **Efficient frontier** - 10,000 random portfolio weightings optimised to find the maximum Sharpe ratio and minimum variance portfolios using `scipy`
+- **PDF export** - automatically generated comprehensive report including all tables, charts, and analyses in a single document 
 
 ---
 
@@ -20,10 +31,10 @@ A command-line portfolio tracking application built as part of a job application
 
 The application follows the **Model-View-Controller (MVC)** pattern:
 
-- **Model** — stores and computes on portfolio data (`models/`)
-- **View** — renders tables and charts, never fetches or computes (`views/`)
-- **Controller** — receives CLI commands and routes between model and view (`controllers/`)
-- **Infrastructure** — handles database persistence and market data fetching (`utils/`)
+- **Model** - stores and computes on portfolio data (`models/`)
+- **View** - renders tables and charts, never fetches or computes (`views/`)
+- **Controller** - receives CLI commands and routes between model and view (`controllers/`)
+- **Infrastructure** - handles database persistence and market data fetching (`utils/`)
 
 ```
 cli-portfolio-tracker/
@@ -32,17 +43,19 @@ cli-portfolio-tracker/
 ├── requirements.txt
 ├── portfolio_tracker/
 │   ├── models/
-│   │   ├── asset.py          # Asset dataclass with position aggregation
-│   │   ├── portfolio.py      # Portfolio-level calculations and weights
-│   │   └── simulation.py     # Monte Carlo GBM simulation
+│   │   ├── asset.py           # Asset dataclass with position aggregation
+│   │   ├── portfolio.py       # Portfolio-level calculations and weights
+│   │   ├── simulation.py      # Monte Carlo GBM simulation
+│   │   └── risk.py            # Risk metrics and efficient frontier
 │   ├── views/
-│   │   ├── table_view.py     # Rich terminal tables
-│   │   └── chart_view.py     # Matplotlib charts
+│   │   ├── table_view.py      # Rich terminal tables
+│   │   └── chart_view.py      # Matplotlib charts
 │   ├── controllers/
 │   │   └── portfolio_controller.py
 │   └── utils/
-│       ├── storage.py        # SQLite persistence layer
-│       └── market_data.py    # yfinance wrapper
+│       ├── storage.py         # SQLite persistence layer
+│       ├── market_data.py     # yfinance wrapper
+│       └── export.py          # PDF report generation
 ```
 
 ---
@@ -51,12 +64,12 @@ cli-portfolio-tracker/
 
 ### Prerequisites
 
-**Linux** — install the tkinter system package before proceeding:
+**Linux** - install the tkinter system package before proceeding:
 ```bash
 sudo apt install python3-tk
 ```
 
-**Windows / macOS** — no additional system packages required.
+**Windows / macOS** - no additional system packages required.
 
 ### Setup
 
@@ -106,7 +119,7 @@ python main.py add SHEL.L Energy Equity 10 3500.00
 python main.py add MSFT Technology Equity 5 350.00 --date 2024-01-15
 ```
 
-Tickers follow Yahoo Finance conventions — append the exchange suffix for non-US stocks (`.AS` for Amsterdam, `.L` for London, `.DE` for Frankfurt, `.PA` for Paris).
+Tickers follow Yahoo Finance conventions. Append the exchange suffix for non-US stocks (`.AS` for Amsterdam, `.L` for London, `.DE` for Frankfurt, `.PA` for Paris).
 
 ### Show portfolio
 ```bash
@@ -163,6 +176,35 @@ python main.py simulate
 ```
 Runs 100,000 simulated portfolio paths over 15 years using Geometric Brownian Motion, calibrated to the portfolio's historical returns and volatility. Displays a fan chart showing the 5th, 25th, 50th, 75th, and 95th percentile outcomes.
 
+### Risk metrics
+```bash
+python main.py risk
+python main.py risk --period 5y
+```
+Displays Sharpe ratio, Sortino ratio, maximum drawdown, VaR (95%), and CVaR (95%), calculated from historical portfolio returns.
+
+### Benchmark comparison
+```bash
+python main.py benchmark
+python main.py benchmark --benchmark aex
+python main.py benchmark --benchmark aex --period 5y
+```
+Compares portfolio cumulative returns against a benchmark index. Available benchmarks: `sp500`, `aex`, `ftse`, `dax`, `nasdaq`. Also accepts any raw Yahoo Finance ticker. Displays alpha, beta, and a cumulative return chart.
+
+### Efficient frontier
+```bash
+python main.py frontier
+python main.py frontier --period 5y
+```
+Generates 10,000 random portfolio weightings and plots the risk/return tradeoff. Highlights the maximum Sharpe ratio and minimum variance portfolios found by `scipy` optimisation.
+
+### Export PDF report
+```bash
+python main.py export
+python main.py export --filename my_report.pdf
+```
+Generates a comprehensive PDF report including the holdings table, allocation charts, correlation heatmap, benchmark comparison, Monte Carlo simulation fan chart, and efficient frontier. Defaults to `portfolio_report_YYYY-MM-DD.pdf`.
+
 ---
 
 ## Methodology
@@ -175,7 +217,7 @@ Simulations use Geometric Brownian Motion (GBM):
 
 $$S(t) = S(0) \cdot \exp\left(\left(\mu - \frac{1}{2}\sigma^2\right)dt + \sigma\sqrt{dt}\,Z\right)$$
 
-Where `mu` and `sigma` are estimated from 5 years of actual historical portfolio returns, weighted by current portfolio allocation. This makes the simulation specific to the composition of your portfolio. A high-volatility portfolio will produce a wider fan than a low-volatility one.
+Where `mu` and `sigma` are estimated from 5 years of actual historical portfolio returns, weighted by current portfolio allocation. This makes the simulation specific to the composition of your portfolio, a high-volatility portfolio will produce a wider fan than a low-volatility one.
 
 The simulation assumes **252 trading days per year**, the standard convention in quantitative finance (actual days vary between 250 and 252 depending on the year).
 
@@ -186,15 +228,34 @@ $$\bar{P} = \frac{\sum_{i} Q_i \cdot P_i}{\sum_{i} Q_i}$$
 
 This reflects the true average cost basis of the position regardless of order timing.
 
+### Risk metrics
+All risk metrics are computed from daily historical portfolio returns, weighted by current portfolio allocation:
+
+- **Sharpe ratio** - annualised excess return over the risk-free rate divided by portfolio volatility
+- **Sortino ratio** - like Sharpe, but penalises downside volatility only
+- **Maximum drawdown** - largest peak-to-trough decline over the period
+- **VaR (95%)** - maximum expected daily loss on 95% of trading days
+- **CVaR (95%)** - average loss on the worst 5% of trading days
+
+A European risk-free rate of 3% (annualised) is assumed.
+
+### Efficient frontier
+10,000 random weight combinations are generated and evaluated for annualised return and volatility. Two optimal portfolios are then found using `scipy.optimize.minimize` with SLSQP:
+
+- **Maximum Sharpe ratio** - best risk-adjusted return
+- **Minimum variance** - lowest possible portfolio volatility
+
 ---
 
 ## Dependencies
 
 Key packages:
-- `yfinance` — market data and FX rates
-- `rich` — terminal table formatting
-- `matplotlib` — charts and visualisations
-- `numpy` — numerical computation for simulation
-- `pandas` — time series data handling
+- `yfinance` - market data and FX rates
+- `rich` - terminal table formatting
+- `matplotlib` - charts and visualisations
+- `numpy` - numerical computation for simulation
+- `pandas` - time series data handling
+- `scipy` - portfolio optimisation for the efficient frontier
+- `reportlab` - PDF report generation
 
 Full list in `requirements.txt`.
