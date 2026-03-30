@@ -1,15 +1,15 @@
 from portfolio_tracker.models.portfolio import Portfolio
 from portfolio_tracker.models.simulation import run_simulation, get_percentiles
 from portfolio_tracker.utils.storage import save_asset, delete_asset, load_assets
-from portfolio_tracker.utils.market_data import get_current_price, get_company_name, get_history, get_multiple_history
+from portfolio_tracker.utils.market_data import get_price_in_eur, get_company_name, get_currency, get_history, get_multiple_history
 from portfolio_tracker.views import table_view, chart_view
 from datetime import date
 
 
 def add_asset(ticker: str, sector: str, asset_class: str, quantity: float, purchase_price: float, purchase_date: str = None):
-    """Fetch company name from yfinance and save a new order to the database."""
+    """Fetch company name and currency from yfinance and save a new order to the database."""
     try:
-        get_current_price(ticker)
+        _, currency, _ = get_price_in_eur(ticker)
     except Exception:
         table_view.render_error(f"Ticker '{ticker}' not found on Yahoo Finance.")
         return
@@ -23,9 +23,10 @@ def add_asset(ticker: str, sector: str, asset_class: str, quantity: float, purch
         "quantity":       quantity,
         "purchase_price": purchase_price,
         "purchase_date":  purchase_date or str(date.today()),
+        "currency":       currency,
     }
     save_asset(asset)
-    table_view.render_message(f"[green]Added {quantity} x {ticker.upper()} at €{purchase_price:.2f}[/green]")
+    table_view.render_message(f"[green]Added {quantity} x {ticker.upper()} at {currency} {purchase_price:.2f}[/green]")
 
 
 def show_portfolio():

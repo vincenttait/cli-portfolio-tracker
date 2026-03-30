@@ -6,5 +6,6 @@ CREATE TABLE IF NOT EXISTS assets (
     asset_class    TEXT    NOT NULL,
     quantity       REAL    NOT NULL,
     purchase_price REAL    NOT NULL,
-    purchase_date  TEXT    NOT NULL DEFAULT (date('now'))
+    purchase_date  TEXT    NOT NULL DEFAULT (date('now')),
+    currency       TEXT    NOT NULL DEFAULT 'USD'
 );

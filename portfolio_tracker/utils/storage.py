@@ -26,8 +26,8 @@ def load_assets():
 def save_asset(asset: dict):
     with get_connection() as conn:
         conn.execute("""
-            INSERT INTO assets (ticker, name, sector, asset_class, quantity, purchase_price, purchase_date)
-            VALUES (:ticker, :name, :sector, :asset_class, :quantity, :purchase_price, :purchase_date)
+            INSERT INTO assets (ticker, name, sector, asset_class, quantity, purchase_price, purchase_date, currency)
+            VALUES (:ticker, :name, :sector, :asset_class, :quantity, :purchase_price, :purchase_date, :currency)
         """, asset)
 
 
@@ -46,6 +46,7 @@ def update_asset(asset_id: int, asset: dict):
                 asset_class    = :asset_class,
                 quantity       = :quantity,
                 purchase_price = :purchase_price,
-                purchase_date  = :purchase_date
+                purchase_date  = :purchase_date,
+                currency       = :currency
             WHERE id = :id
         """, {**asset, "id": asset_id})
