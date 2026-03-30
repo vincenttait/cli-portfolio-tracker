@@ -188,3 +188,25 @@ def render_benchmark(metrics: dict):
     )
 
     console.print(table)
+
+
+def render_frontier(frontier: dict):
+    """Render the optimal portfolio weightings from the efficient frontier."""
+    table = Table(
+        title=f"Efficient frontier — optimal portfolios ({frontier['period']} history)",
+        box=box.ROUNDED
+    )
+    table.add_column("Ticker",          style="bold")
+    table.add_column("Max Sharpe",      justify="right")
+    table.add_column("Min Variance",    justify="right")
+
+    for ticker, ms_w, mv_w in zip(
+        frontier["tickers"],
+        frontier["max_sharpe_weights"],
+        frontier["min_var_weights"]
+    ):
+        table.add_row(ticker, f"{ms_w*100:.1f}%", f"{mv_w*100:.1f}%")
+
+    console.print(table)
+    console.print(f"\nMax Sharpe portfolio:   return [green]{frontier['max_sharpe_return']:.2f}%[/green]  |  volatility {frontier['max_sharpe_vol']:.2f}%")
+    console.print(f"Min variance portfolio: return [green]{frontier['min_var_return']:.2f}%[/green]  |  volatility {frontier['min_var_vol']:.2f}%")

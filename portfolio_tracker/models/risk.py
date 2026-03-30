@@ -128,3 +128,80 @@ def benchmark_comparison(
         "aligned_portfolio": aligned["portfolio"],
         "aligned_benchmark": aligned["benchmark"],
     }
+
+
+from scipy.optimize import minimize
+
+def efficient_frontier(tickers: list[str], period: str = "2y", n_portfolios: int = 10_000) -> dict:
+    """
+    Generate the efficient frontier by simulating random portfolio weightings
+    and optimising for minimum variance and maximum Sharpe ratio.
+    """
+    hist = get_multiple_history(tickers, period=period)
+    returns = hist.pct_change().dropna()
+    returns.index = returns.index.tz_localize(None)
+
+    mean_returns = returns.mean() * TRADING_DAYS_PER_YEAR
+    cov_matrix   = returns.cov() * TRADING_DAYS_PER_YEAR
+    n_assets     = len(tickers)
+
+    # Simulate random portfolios
+    results = np.zeros((3, n_portfolios))
+    all_weights = np.zeros((n_portfolios, n_assets))
+
+    for i in range(n_portfolios):
+        w = np.random.random(n_assets)
+        w /= w.sum()
+        all_weights[i] = w
+
+        port_return = np.dot(w, mean_returns)
+        port_volatility = np.sqrt(w @ cov_matrix.values @ w)
+        port_sharpe = (port_return - RISK_FREE_RATE) / port_volatility
+
+        results[0, i] = port_volatility * 100
+        results[1, i] = port_return * 100
+        results[2, i] = port_sharpe
+
+    # Optimise for maximum Sharpe ratio
+    def neg_sharpe(w):
+        ret = np.dot(w, mean_returns)
+        vol = np.sqrt(w @ cov_matrix.values @ w)
+        return -(ret - RISK_FREE_RATE) / vol
+
+    def neg_sharpe(w):
+        ret = np.dot(w, mean_returns)
+        vol = np.sqrt(w @ cov_matrix.values @ w)
+        return -(ret - RISK_FREE_RATE) / vol
+
+    def portfolio_volatility(w):
+        return np.sqrt(w @ cov_matrix.values @ w)
+
+    constraints = {"type": "eq", "fun": lambda w: w.sum() - 1}
+    bounds = tuple((0, 1) for _ in range(n_assets))
+    w0 = np.ones(n_assets) / n_assets
+
+    max_sharpe_result = minimize(neg_sharpe,        w0, method="SLSQP", bounds=bounds, constraints=constraints)
+    min_var_result    = minimize(portfolio_volatility, w0, method="SLSQP", bounds=bounds, constraints=constraints)
+
+    def portfolio_stats(w):
+        ret = np.dot(w, mean_returns)
+        vol = np.sqrt(w @ cov_matrix.values @ w)
+        return ret * 100, vol * 100
+
+    max_sharpe_return, max_sharpe_vol = portfolio_stats(max_sharpe_result.x)
+    min_var_return,    min_var_vol    = portfolio_stats(min_var_result.x)
+
+    return {
+        "tickers":            tickers,
+        "volatilities":       results[0],
+        "returns":            results[1],
+        "sharpe_ratios":      results[2],
+        "all_weights":        all_weights,
+        "max_sharpe_weights": max_sharpe_result.x,
+        "min_var_weights":    min_var_result.x,
+        "max_sharpe_return":  max_sharpe_return,
+        "max_sharpe_vol":     max_sharpe_vol,
+        "min_var_return":     min_var_return,
+        "min_var_vol":        min_var_vol,
+        "period":             period,
+    }

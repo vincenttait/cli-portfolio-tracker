@@ -50,6 +50,10 @@ def main():
     bench_parser.add_argument("--benchmark", type=str, default="sp500", help="Benchmark: sp500, aex, ftse, dax, nasdaq or a raw ticker (default: sp500)")
     bench_parser.add_argument("--period",    type=str, default="2y",    help="Historical period (default: 2y)")
 
+    # frontier
+    frontier_parser = subparsers.add_parser("frontier", help="Plot the efficient frontier for the current portfolio")
+    frontier_parser.add_argument("--period", type=str, default="2y", help="Historical period (default: 2y)")
+
     args = parser.parse_args()
 
     if args.command == "add":
@@ -81,6 +85,8 @@ def main():
         portfolio_controller.show_risk(args.period)
     elif args.command == "benchmark":
         portfolio_controller.show_benchmark(args.benchmark, args.period)
+    elif args.command == "frontier":
+        portfolio_controller.show_frontier(args.period)
     else:
         parser.print_help()
 

@@ -138,3 +138,17 @@ def show_benchmark(benchmark: str = "sp500", period: str = "2y"):
     metrics = risk.benchmark_comparison(tickers, weights, benchmark, period)
     table_view.render_benchmark(metrics)
     chart_view.plot_benchmark_comparison(metrics)
+
+
+def show_frontier(period: str = "2y"):
+    """Generate and display the efficient frontier for the current portfolio."""
+    from portfolio_tracker.models import risk
+    portfolio = Portfolio()
+    if len(portfolio.assets) < 2:
+        table_view.render_message("You need at least 2 assets to plot an efficient frontier.")
+        return
+    tickers = [a.ticker for a in portfolio.assets]
+    table_view.render_message(f"Generating efficient frontier with 10,000 portfolios over {period}...")
+    frontier = risk.efficient_frontier(tickers, period)
+    table_view.render_frontier(frontier)
+    chart_view.plot_efficient_frontier(frontier)

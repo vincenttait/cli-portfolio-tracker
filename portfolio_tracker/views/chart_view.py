@@ -118,3 +118,50 @@ def plot_benchmark_comparison(metrics: dict):
     fig.autofmt_xdate()
     plt.tight_layout()
     plt.show()
+
+
+def plot_efficient_frontier(frontier: dict):
+    """
+    Plot the efficient frontier — the cloud of random portfolios coloured
+    by Sharpe ratio, with the optimal portfolios highlighted.
+    """
+    fig, ax = plt.subplots(figsize=(12, 8))
+
+    # Scatter plot of all random portfolios, coloured by Sharpe ratio
+    sc = ax.scatter(
+        frontier["volatilities"],
+        frontier["returns"],
+        c=frontier["sharpe_ratios"],
+        cmap="RdYlGn",
+        alpha=0.4,
+        s=8,
+    )
+    plt.colorbar(sc, ax=ax, label="Sharpe ratio")
+
+    # Maximum Sharpe ratio portfolio
+    ax.scatter(
+        frontier["max_sharpe_vol"],
+        frontier["max_sharpe_return"],
+        marker="*", color="blue", s=300, zorder=5,
+        label=f"Max Sharpe  {_weights_label(frontier['tickers'], frontier['max_sharpe_weights'])}"
+    )
+
+    # Minimum variance portfolio
+    ax.scatter(
+        frontier["min_var_vol"],
+        frontier["min_var_return"],
+        marker="*", color="red", s=300, zorder=5,
+        label=f"Min variance  {_weights_label(frontier['tickers'], frontier['min_var_weights'])}"
+    )
+
+    ax.set_title(f"Efficient frontier ({frontier['period']} history, 10,000 portfolios)")
+    ax.set_xlabel("Annualised volatility (%)")
+    ax.set_ylabel("Annualised return (%)")
+    ax.legend(loc="upper left", fontsize=9)
+    plt.tight_layout()
+    plt.show()
+
+
+def _weights_label(tickers: list[str], weights: list[float]) -> str:
+    """Format weights as a compact label for the legend."""
+    return "  |  ".join(f"{t}: {w*100:.1f}%" for t, w in zip(tickers, weights))
