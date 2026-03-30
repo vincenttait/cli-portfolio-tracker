@@ -1,3 +1,8 @@
+import matplotlib
+try:
+    matplotlib.use("TkAgg")
+except Exception:
+    pass
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import numpy as np
